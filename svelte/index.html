@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SvelteKit Velocity Mission: SDE2 Learning Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+        }
+
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Chart Container Styling per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f97316; /* Orange 500 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ea580c;
+        }
+
+        /* Utility for hiding scrollbar but keeping functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .active-nav-item {
+            border-left: 4px solid #f97316;
+            background-color: #1e293b;
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Chosen Palette: Dark Mode Tech (Slate 900 Background, Orange 500 Accents for Svelte Identity, White/Grey text) -->
+    
+    <!-- Application Structure Plan: 
+         1. Dashboard Layout: Sidebar for navigation between learning "Modules" (Phases), Main Content area for reading and interaction.
+         2. "SDE2 Context": The content is framed not as "tutorials" but as "Architecture Briefings" and "Migration Intel" suitable for a senior dev.
+         3. Interactive Elements: 
+            - "Comparison Engine": Toggles to switch code views between React (Mental Model) and Svelte (New Model).
+            - "Skill Acquisition Radar": A Chart.js visualization showing proficiency growth.
+            - "Architecture Diagram": HTML/CSS block visualization of the SvelteKit data flow.
+         4. Navigation: Functional tabs for: Mission Brief, Core Mechanics (Reactivity), Routing & Loading, Server Interactions, and Advanced Ops.
+    -->
+
+    <!-- Visualization & Content Choices:
+         - Radar Chart (Chart.js): To visualize the shift in focus areas (e.g., Boilerplate vs Business Logic) compared to traditional frameworks.
+         - Stacked Bar Chart (Chart.js): To show bundle size savings and performance metrics (hypothetical data based on framework benchmarks).
+         - HTML/CSS Diagrams: To visualize the "Hydration" and "Edge" deployment concepts without SVG/Mermaid.
+         - Interactive Code Blocks: DOM manipulation to swap text content, demonstrating the syntax efficiency.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-700 h-16 flex items-center justify-between px-6 flex-shrink-0 z-10">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl">🍊</span>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">SVELTEKIT <span class="text-orange-500">VELOCITY</span></h1>
+                <p class="text-xs text-slate-400 mono-font">TARGET: SDE2 // CLEARANCE: MAX</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs text-slate-400">MISSION STATUS</p>
+                <p class="text-sm font-bold text-green-400" id="mission-timer">ACTIVE</p>
+            </div>
+            <button id="reset-progress-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded text-xs border border-slate-600 transition-colors">
+                RESET SIMULATION
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 overflow-y-auto hidden md:block">
+            <div class="p-4">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Flight Modules</p>
+                <ul class="space-y-1" id="nav-list">
+                    <!-- Nav items populated by JS -->
+                </ul>
+            </div>
+            
+            <div class="p-4 border-t border-slate-700">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Intel Analysis</p>
+                <div class="bg-slate-900 rounded p-3">
+                    <p class="text-xs text-slate-400 mb-1">Efficiency Delta</p>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div class="bg-orange-500 h-full w-3/4"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                        <span>React</span>
+                        <span class="text-orange-400">Svelte +30%</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Nav Toggle (Visible only on small screens) -->
+        <div class="md:hidden absolute bottom-4 right-4 z-50">
+            <button id="mobile-nav-toggle" class="bg-orange-500 text-white p-3 rounded-full shadow-lg">
+                ☰
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto bg-slate-900 p-4 md:p-8 relative" id="main-content">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+    </div>
+
+    <!-- JavaScript Implementation -->
+    <script>
+        // State Management
+        const state = {
+            currentModule: 'briefing',
+            progress: 0,
+            completedModules: []
+        };
+
+        // Data Store: Learning Plan Content
+        const modules = {
+            briefing: {
+                id: 'briefing',
+                title: 'Mission Briefing',
+                icon: '📋',
+                content: `
+                    <div class="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                        <div class="space-y-4">
+                            <h2 class="text-3xl font-bold text-white">Objective: High-Velocity Framework Migration</h2>
+                            <p class="text-lg text-slate-300 leading-relaxed">
+                                Welcome, Engineer. You know scalable architecture, you know the DOM is expensive, and you know hydration can be a bottleneck. 
+                                This plan is designed to skip the "Hello World" fluff and target the architectural paradigms of SvelteKit.
+                            </p>
+                            <div class="bg-slate-800 border-l-4 border-orange-500 p-4 rounded-r">
+                                <p class="text-sm text-slate-300">
+                                    <strong class="text-white">Core Philosophy:</strong> React is a runtime library that interprets your code in the browser. 
+                                    Svelte is a <span class="text-orange-400 font-bold">compiler</span> that converts your code into highly optimized vanilla JavaScript at build time. 
+                                    No Virtual DOM. Minimal runtime overhead.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Chart Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                                <h3 class="text-sm font-bold text-slate-200 mb-4 uppercase tracking-wide">Developer Experience vs. Complexity</h3>
+                                <div class="chart-container">
+                                    <canvas id="briefingChart"></canvas>
+                                </div>
+                                <p class="text-xs text-center text-slate-500 mt-2">Projection: Lower boilerplate enables faster feature iterations.</p>
+                            </div>
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-bold text-white">Why SvelteKit for an SDE2?</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex items-start">
+                                        <span class="bg-green-500/10 text-green-500 rounded p-1 mr-3 text-xs mono-font">PERF</span>
+                                        <span class="text-slate-300 text-sm">Top-tier performance by default. Less code sent to the client means faster TTI (Time to Interactive), crucial for Amazon-scale metrics.</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="bg-blue-500/10 text-blue-500 rounded p-1 mr-3 text-xs mono-font">SIMP</span>
+                                        <span class="text-slate-300 text-sm">State management is built-in. No more complex Context Provider wrapping hell or external state libraries for basic needs.</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="bg-purple-500/10 text-purple-500 rounded p-1 mr-3 text-xs mono-font">FULL</span>
+                                        <span class="text-slate-300 text-sm">It's a full-stack metaframework (like Next.js) but with web standards (Request/Response objects) at its core.</span>
+                                    </li>
+                                </ul>
+                                <button onclick="navigateTo('reactivity')" class="w-full mt-4 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded transition-all">
+                                    Initiate Module 1: Reactivity Mechanics &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            reactivity: {
+                id: 'reactivity',
+                title: 'Phase 1: Runes & Reactivity',
+                icon: '⚡',
+                content: `
+                    <div class="max-w-4xl mx-auto space-y-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">Phase 1: The Compiler Advantage</h2>
+                            <p class="text-slate-400 mt-2">Forget ` + "`useState`" + ` and ` + "`useEffect`" + `. Svelte 5 introduces "Runes" — explicit signals that opt-in to fine-grained reactivity.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Comparison Tool -->
+                            <div class="bg-slate-800 rounded-lg overflow-hidden border border-slate-700 shadow-xl">
+                                <div class="bg-slate-900 p-3 flex justify-between items-center border-b border-slate-700">
+                                    <span class="text-xs font-bold text-slate-400 uppercase">Syntax Translator</span>
+                                    <div class="flex space-x-2">
+                                        <button onclick="toggleCode('react')" id="btn-react" class="text-xs bg-blue-900 text-blue-200 px-2 py-1 rounded">React</button>
+                                        <button onclick="toggleCode('svelte')" id="btn-svelte" class="text-xs bg-slate-700 text-slate-400 px-2 py-1 rounded">Svelte 5 (Runes)</button>
+                                    </div>
+                                </div>
+                                <div class="p-4 mono-font text-sm bg-slate-950 text-slate-300 h-64 overflow-auto" id="code-display">
+                                    <!-- Code injected via JS -->
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div class="bg-slate-800/50 p-4 rounded border border-slate-700">
+                                    <h3 class="text-lg font-bold text-orange-400 mb-2">Key Intel: Runes</h3>
+                                    <p class="text-sm text-slate-300 mb-2">
+                                        <span class="mono-font text-orange-300">$state()</span>: Declares reactive state.
+                                    </p>
+                                    <p class="text-sm text-slate-300 mb-2">
+                                        <span class="mono-font text-orange-300">$derived()</span>: Like <span class="mono-font">useMemo</span>, but automatic dependency tracking.
+                                    </p>
+                                    <p class="text-sm text-slate-300">
+                                        <span class="mono-font text-orange-300">$effect()</span>: Side effects. Runs only when dependencies change.
+                                    </p>
+                                </div>
+                                
+                                <div class="border border-slate-700 rounded p-4">
+                                    <h4 class="font-bold text-white mb-2">Your Assignment</h4>
+                                    <p class="text-sm text-slate-400 mb-3">Build a "Stock Ticker" component.</p>
+                                    <ul class="text-sm text-slate-300 list-disc list-inside space-y-1">
+                                        <li>Create a variable for price.</li>
+                                        <li>Update it every second with <span class="mono-font">setInterval</span>.</li>
+                                        <li>Use a derived value to show if the trend is UP or DOWN.</li>
+                                        <li>Notice: No dependency arrays. No <span class="mono-font">useRef</span> hacks for stale closures.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            routing: {
+                id: 'routing',
+                title: 'Phase 2: Directory Routing',
+                icon: '📂',
+                content: `
+                    <div class="max-w-4xl mx-auto space-y-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">Phase 2: File-System Routing</h2>
+                            <p class="text-slate-400 mt-2">SvelteKit uses a directory-based router similar to Next.js App Router, but strictly standardized.</p>
+                        </div>
+
+                        <!-- Visual Hierarchy -->
+                        <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+                            <h3 class="text-lg font-bold text-white mb-4">Anatomy of a Route</h3>
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div class="flex-1 bg-slate-900 p-4 rounded border border-slate-600">
+                                    <div class="text-xs text-slate-500 mb-2">src/routes/dashboard/</div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center p-2 bg-slate-800 rounded border border-slate-700">
+                                            <span class="text-xl mr-2">📄</span>
+                                            <div>
+                                                <div class="text-sm font-bold text-orange-400">+page.svelte</div>
+                                                <div class="text-[10px] text-slate-400">The UI Component (View)</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-slate-800 rounded border border-slate-700">
+                                            <span class="text-xl mr-2">⚙️</span>
+                                            <div>
+                                                <div class="text-sm font-bold text-purple-400">+page.server.ts</div>
+                                                <div class="text-[10px] text-slate-400">Server-side Data Loading (Backend)</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-slate-800 rounded border border-slate-700">
+                                            <span class="text-xl mr-2">🖼️</span>
+                                            <div>
+                                                <div class="text-sm font-bold text-blue-400">+layout.svelte</div>
+                                                <div class="text-[10px] text-slate-400">Wrapper for this route & children</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 space-y-4">
+                                    <div class="bg-slate-900/50 p-3 rounded">
+                                        <h4 class="text-sm font-bold text-white">The "Load" Function</h4>
+                                        <p class="text-xs text-slate-300 mt-1">
+                                            In <span class="mono-font text-purple-400">+page.server.ts</span>, you export a <span class="mono-font">load</span> function. 
+                                            SvelteKit runs this on the server (SSR), fetches data (DB/API), and passes it to the page as props named <span class="mono-font">data</span>.
+                                        </p>
+                                        <p class="text-xs text-slate-300 mt-2 italic border-l-2 border-slate-600 pl-2">
+                                            "It's like getServerSideProps but automatic and fully typed."
+                                        </p>
+                                    </div>
+                                    <div class="bg-slate-900/50 p-3 rounded">
+                                        <h4 class="text-sm font-bold text-white">Dynamic Routes</h4>
+                                        <p class="text-xs text-slate-300 mt-1">
+                                            Create a folder named <span class="mono-font text-orange-300">[id]</span> to capture parameters.
+                                            Access via <span class="mono-font">params.id</span> in your load function.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="border border-slate-700 rounded p-4">
+                            <h4 class="font-bold text-white mb-2">Your Assignment</h4>
+                            <p class="text-sm text-slate-400 mb-3">Create a Product Detail Page.</p>
+                            <ul class="text-sm text-slate-300 list-disc list-inside space-y-1">
+                                <li>Route: <span class="mono-font">/products/[slug]</span>.</li>
+                                <li>Server Load: Fetch dummy JSON data based on slug.</li>
+                                <li>UI: Render the product title and price.</li>
+                                <li>Bonus: Use a <span class="mono-font">+layout.svelte</span> to add a persistent navbar.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            server: {
+                id: 'server',
+                title: 'Phase 3: Form Actions',
+                icon: '📡',
+                content: `
+                    <div class="max-w-4xl mx-auto space-y-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">Phase 3: The Mutation (Actions)</h2>
+                            <p class="text-slate-400 mt-2">Stop manually preventing default events and stringifying JSON. Return to the web standards.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-800 p-5 rounded border border-slate-700">
+                                <h3 class="text-lg font-bold text-white mb-4">The "Actions" Pattern</h3>
+                                <div class="space-y-4 text-sm text-slate-300">
+                                    <p>
+                                        In SvelteKit, <span class="mono-font text-orange-400">&lt;form&gt;</span> elements are first-class citizens.
+                                    </p>
+                                    <ol class="list-decimal list-inside space-y-2 marker:text-slate-500">
+                                        <li>Create a form in <span class="mono-font">+page.svelte</span> pointing to an action.</li>
+                                        <li>Export <span class="mono-font">actions</span> in <span class="mono-font">+page.server.ts</span>.</li>
+                                        <li>SvelteKit handles the POST request, formdata parsing, and invalidation.</li>
+                                    </ol>
+                                    <div class="mt-4 bg-slate-900 p-3 rounded mono-font text-xs">
+                                        <span class="text-purple-400">export</span> <span class="text-blue-400">const</span> actions = {<br>
+                                        &nbsp;&nbsp;<span class="text-yellow-400">login</span>: <span class="text-blue-400">async</span> ({ request }) => {<br>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-blue-400">const</span> data = <span class="text-blue-400">await</span> request.formData();<br>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-slate-500">// Process logic...</span><br>
+                                        &nbsp;&nbsp;}<br>
+                                        };
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-slate-800 p-5 rounded border border-slate-700 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white mb-4">Progressive Enhancement</h3>
+                                    <p class="text-sm text-slate-300 mb-4">
+                                        By default, forms work even if JS fails. But with the <span class="mono-font text-orange-400">use:enhance</span> action, SvelteKit progressively enhances the form to use <span class="mono-font">fetch</span> behind the scenes.
+                                    </p>
+                                    <p class="text-sm text-slate-300">
+                                        This gives you instant optimistic UI updates without writing complex async toggles.
+                                    </p>
+                                </div>
+                                <div class="mt-4 p-3 bg-green-900/20 border border-green-800 rounded">
+                                    <p class="text-xs text-green-400 font-bold">PRO TIP</p>
+                                    <p class="text-xs text-green-200 mt-1">
+                                        This is the biggest productivity booster vs React. No <span class="mono-font">useState</span> for every input field.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="serverChart"></canvas>
+                        </div>
+                    </div>
+                `
+            },
+            advanced: {
+                id: 'advanced',
+                title: 'Phase 4: Advanced Ops',
+                icon: '🚀',
+                content: `
+                    <div class="max-w-4xl mx-auto space-y-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">Phase 4: Deploy & Optimize</h2>
+                            <p class="text-slate-400 mt-2">Adapters, Edge Functions, and Environment Variables.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Card 1 -->
+                            <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                                <div class="text-3xl mb-2">🔌</div>
+                                <h3 class="font-bold text-white">Adapters</h3>
+                                <p class="text-xs text-slate-300 mt-2">
+                                    SvelteKit builds are adapter-agnostic. 
+                                    <br><br>
+                                    <span class="mono-font text-orange-300">adapter-auto</span>: Default.<br>
+                                    <span class="mono-font text-orange-300">adapter-node</span>: For EC2/Docker.<br>
+                                    <span class="mono-font text-orange-300">adapter-static</span>: For S3 buckets.<br>
+                                    <span class="mono-font text-orange-300">adapter-vercel</span>: For Serverless/Edge.
+                                </p>
+                            </div>
+                             <!-- Card 2 -->
+                            <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                                <div class="text-3xl mb-2">🌍</div>
+                                <h3 class="font-bold text-white">Edge Handling</h3>
+                                <p class="text-xs text-slate-300 mt-2">
+                                    Move your load functions to the edge with a single config line:
+                                    <br><br>
+                                    <span class="mono-font bg-slate-900 p-1">export const config = { runtime: 'edge' };</span>
+                                    <br><br>
+                                    Reduced latency for global users (Amazon style).
+                                </p>
+                            </div>
+                             <!-- Card 3 -->
+                            <div class="bg-slate-800 p-4 rounded border border-slate-700">
+                                <div class="text-3xl mb-2">🔐</div>
+                                <h3 class="font-bold text-white">Type Safety</h3>
+                                <p class="text-xs text-slate-300 mt-2">
+                                    Automatic type generation.
+                                    <br><br>
+                                    Your <span class="mono-font">PageData</span> types are auto-generated based on what you return from <span class="mono-font">load()</span>. 
+                                    Zero manual interface duplication.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-orange-900/50 to-slate-900 p-6 rounded border border-orange-700/30 text-center">
+                            <h3 class="text-2xl font-bold text-white mb-2">Mission Complete?</h3>
+                            <p class="text-slate-300 mb-6">You have the theory. Now build the project.</p>
+                            <p class="text-sm text-slate-400 mb-4">Final Task: Build an "Internal Ops Dashboard" with Authentication, DB connection (Supabase/Neon), and Chart.js reporting.</p>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // Code Snippets for Comparison
+        const codeSnippets = {
+            react: `// React Counter
+import { useState, useMemo } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  const double = useMemo(() => count * 2, [count]);
+
+  function increment() {
+    setCount(c => c + 1);
+  }
+
+  return (
+    <button onClick={increment}>
+      {count} doubled is {double}
+    </button>
+  );
+}`,
+            svelte: `// Svelte 5 Counter
+<script>
+  let count = $state(0);
+  let double = $derived(count * 2);
+
+  function increment() {
+    count += 1;
+  }
+<\/script>
+
+<button onclick={increment}>
+  {count} doubled is {double}
+</button>`
+        };
+
+        // DOM Elements
+        const navList = document.getElementById('nav-list');
+        const mainContent = document.getElementById('main-content');
+        const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+
+        // Functions
+        function init() {
+            renderNav();
+            navigateTo('briefing');
+            startTimer();
+        }
+
+        function renderNav() {
+            navList.innerHTML = '';
+            Object.values(modules).forEach(mod => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-3 py-2 rounded text-sm flex items-center transition-colors hover:bg-slate-700 ${state.currentModule === mod.id ? 'active-nav-item' : 'text-slate-400'}`;
+                btn.innerHTML = `<span class="mr-3">${mod.icon}</span> ${mod.title}`;
+                btn.onclick = () => navigateTo(mod.id);
+                li.appendChild(btn);
+                navList.appendChild(li);
+            });
+        }
+
+        function navigateTo(id) {
+            state.currentModule = id;
+            renderNav(); // Update active state styling
+            
+            // Render Content
+            mainContent.innerHTML = modules[id].content;
+            mainContent.scrollTop = 0; // Reset scroll
+
+            // Initialize specific charts or logic based on module
+            if (id === 'briefing') initBriefingChart();
+            if (id === 'reactivity') {
+                // Default to React view
+                toggleCode('react');
+            }
+            if (id === 'server') initServerChart();
+        }
+
+        // Comparison Logic
+        window.toggleCode = function(type) {
+            const display = document.getElementById('code-display');
+            const btnReact = document.getElementById('btn-react');
+            const btnSvelte = document.getElementById('btn-svelte');
+
+            if (!display) return;
+
+            display.innerText = codeSnippets[type];
+
+            // Update button styles
+            if (type === 'react') {
+                btnReact.className = "text-xs bg-blue-600 text-white px-2 py-1 rounded shadow";
+                btnSvelte.className = "text-xs bg-slate-700 text-slate-400 px-2 py-1 rounded";
+            } else {
+                btnReact.className = "text-xs bg-slate-700 text-slate-400 px-2 py-1 rounded";
+                btnSvelte.className = "text-xs bg-orange-600 text-white px-2 py-1 rounded shadow";
+            }
+        };
+
+        // Charts
+        function initBriefingChart() {
+            const ctx = document.getElementById('briefingChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Performance', 'Boilerplate', 'State Mgmt', 'Routing', 'Native Web'],
+                    datasets: [{
+                        label: 'SvelteKit',
+                        data: [95, 20, 90, 85, 95],
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        borderColor: 'rgba(249, 115, 22, 1)',
+                        pointBackgroundColor: 'rgba(249, 115, 22, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Traditional SPA',
+                        data: [70, 80, 50, 60, 40],
+                        backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                        borderColor: 'rgba(148, 163, 184, 1)',
+                        pointBackgroundColor: 'rgba(148, 163, 184, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { size: 12 } },
+                            ticks: { display: false, max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1' } }
+                    }
+                }
+            });
+        }
+
+        function initServerChart() {
+            const ctx = document.getElementById('serverChart');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Client Bundle Size', 'Time to Interactive'],
+                    datasets: [{
+                        label: 'React (Next.js)',
+                        data: [120, 1.8],
+                        backgroundColor: '#3b82f6',
+                    },
+                    {
+                        label: 'SvelteKit',
+                        data: [40, 0.6],
+                        backgroundColor: '#f97316',
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + (context.dataIndex === 0 ? ' KB' : ' sec');
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Misc
+        function startTimer() {
+            const timerEl = document.getElementById('mission-timer');
+            let seconds = 0;
+            setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                if(timerEl) timerEl.innerText = `T+ ${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Mobile Nav
+        if(mobileNavToggle) {
+            mobileNavToggle.addEventListener('click', () => {
+                const nav = document.querySelector('nav');
+                nav.classList.toggle('hidden');
+                nav.classList.toggle('fixed');
+                nav.classList.toggle('inset-0');
+                nav.classList.toggle('z-40');
+                nav.classList.toggle('w-full');
+            });
+        }
+
+        // Initialize App
+        init();
+
+    </script>
+</body>
+</html>
