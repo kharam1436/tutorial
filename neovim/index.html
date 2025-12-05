@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neovim 마스터리: 생각의 속도로 코딩하기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #1c1917; /* stone-900 */
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .neo-btn {
+            transition: all 0.2s;
+        }
+        .neo-btn:active {
+            transform: translateY(2px);
+        }
+
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .highlight-code {
+            background-color: #e7e5e4; /* stone-200 */
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            color: #b45309; /* amber-700 */
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone) with Amber/Orange Accents for focus and clarity. -->
+    <!-- Application Structure Plan: 
+         1. Hero Section: Sets the value proposition (Efficiency).
+         2. Interactive Learning Curve: Sets expectations using Chart.js.
+         3. The Mechanics (Interactive Grid): Explains the "Modal" concept visually.
+         4. The Grammar (Simulator): A practical "Try it" section for text objects (Verb + Noun).
+         5. Configuration (Builder): Demystifies init.lua by letting users click to generate code.
+         6. Ecosystem (Data Viz): Visualization of plugin categories to guide advanced learning.
+         This structure moves from "Why" -> "How" -> "What" -> "Customize" -> "Extend".
+    -->
+    <!-- Visualization & Content Choices:
+         1. Learning Curve (Line Chart): Visualizes the "steep learning curve" vs "long-term efficiency" myth.
+         2. Plugin Distribution (Doughnut Chart): Categorizes essential plugins (LSP, Treesitter, UI) to organize the complex ecosystem.
+         3. HTML/JS Simulators: Used for text editing logic instead of static text to provide active learning (Goal: Change).
+         4. Dynamic Config Builder: JS updates a code block based on UI toggles (Goal: Inform/Organize).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-100 text-stone-800 antialiased selection:bg-amber-200 selection:text-stone-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-stone-100/90 backdrop-blur border-b border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold tracking-tight text-amber-700 font-mono">&lt;Neovim/&gt;</span>
+                    <span class="text-sm font-medium text-stone-500 hidden sm:block">From Zero to Hero</span>
+                </div>
+                <div class="flex space-x-4 text-sm font-medium">
+                    <button onclick="scrollToSection('modes')" class="hover:text-amber-600 transition">기본기</button>
+                    <button onclick="scrollToSection('grammar')" class="hover:text-amber-600 transition">문법</button>
+                    <button onclick="scrollToSection('config')" class="hover:text-amber-600 transition">설정</button>
+                    <button onclick="scrollToSection('plugins')" class="hover:text-amber-600 transition">플러그인</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="pt-16 pb-12 text-center px-4">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-stone-900 mb-6">
+            마우스 없이,<br class="hidden md:block" />
+            <span class="text-amber-600">생각의 속도</span>로 코딩하세요.
+        </h1>
+        <p class="text-lg md:text-xl text-stone-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Neovim은 단순한 에디터가 아닙니다. 텍스트 편집을 위한 언어입니다.<br>
+            초보자부터 전문가까지, 당신의 개발 생산성을 극대화할 여정을 시작해보세요.
+        </p>
+        
+        <!-- Key Metric Visualization -->
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+            <div class="mb-4 text-left">
+                <h3 class="text-lg font-bold text-stone-800">편집 효율성 곡선</h3>
+                <p class="text-sm text-stone-500">초반의 진입 장벽을 넘으면 생산성이 기하급수적으로 상승합니다.</p>
+            </div>
+            <div class="chart-container">
+                <canvas id="learningCurveChart"></canvas>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-24">
+
+        <!-- Section 1: The Modes (Philosophy) -->
+        <section id="modes" class="scroll-mt-20">
+            <div class="mb-8">
+                <span class="text-amber-600 font-bold tracking-wider text-sm uppercase">Chapter 1</span>
+                <h2 class="text-3xl font-bold text-stone-900 mt-2">모달 에디팅의 이해</h2>
+                <p class="mt-4 text-stone-600 text-lg">
+                    일반 메모장과 달리, Neovim은 '입력'과 '명령'을 구분합니다. 
+                    <span class="font-bold">Normal Mode</span>는 키보드를 단축키 패드로, 
+                    <span class="font-bold">Insert Mode</span>는 타자기로 만듭니다.
+                    아래 버튼을 눌러 모드에 따라 키보드의 역할이 어떻게 바뀌는지 확인하세요.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                <div class="flex border-b border-stone-200">
+                    <button onclick="setMode('normal')" id="btn-normal" class="flex-1 py-4 font-bold text-center bg-amber-50 text-amber-700 border-b-2 border-amber-600 transition">Normal Mode (ESC)</button>
+                    <button onclick="setMode('insert')" id="btn-insert" class="flex-1 py-4 font-bold text-center text-stone-500 hover:bg-stone-50 transition">Insert Mode (i)</button>
+                </div>
+                
+                <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <!-- Virtual Keyboard Map -->
+                    <div class="grid grid-cols-3 gap-2 font-mono text-center">
+                        <div class="col-span-3 text-xs text-stone-400 mb-2">키보드 동작 시뮬레이션</div>
+                        <!-- H -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">h</span>
+                            <span id="key-h-desc" class="text-xs text-amber-700 font-bold">왼쪽 이동</span>
+                        </div>
+                        <!-- J -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">j</span>
+                            <span id="key-j-desc" class="text-xs text-amber-700 font-bold">아래 이동</span>
+                        </div>
+                        <!-- K -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">k</span>
+                            <span id="key-k-desc" class="text-xs text-amber-700 font-bold">위로 이동</span>
+                        </div>
+                        <!-- L -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">l</span>
+                            <span id="key-l-desc" class="text-xs text-amber-700 font-bold">오른쪽 이동</span>
+                        </div>
+                        <!-- W -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">w</span>
+                            <span id="key-w-desc" class="text-xs text-amber-700 font-bold">다음 단어</span>
+                        </div>
+                        <!-- D -->
+                        <div class="p-4 rounded bg-stone-100 border border-stone-300 flex flex-col items-center justify-center h-24 transition hover:border-amber-400">
+                            <span class="text-2xl font-bold mb-1">d</span>
+                            <span id="key-d-desc" class="text-xs text-amber-700 font-bold">삭제(잘라내기)</span>
+                        </div>
+                    </div>
+
+                    <!-- Explanation Context -->
+                    <div class="bg-stone-50 p-6 rounded-lg border border-stone-200 h-full flex flex-col justify-center">
+                        <h4 id="mode-title" class="text-xl font-bold text-stone-800 mb-3">Normal Mode: 명령 상태</h4>
+                        <p id="mode-desc" class="text-stone-600 leading-relaxed">
+                            이 상태에서는 키보드를 눌러도 글자가 입력되지 않습니다. 대신 커서를 이동하거나 텍스트를 조작하는 명령을 내립니다. <br><br>
+                            <span class="bg-amber-100 text-amber-800 px-1 rounded">hjkl</span>은 방향키를 대체하며, 손을 키보드 중앙(Home Row)에서 떼지 않게 해줍니다.
+                        </p>
+                        <div class="mt-6 p-4 bg-white rounded border border-stone-200 text-sm text-stone-500">
+                            <span class="font-bold text-stone-900">Pro Tip:</span> <code class="highlight-code">Esc</code>를 누르면 언제든지 Normal Mode로 돌아옵니다. 편집 중 헷갈리면 무조건 Esc를 누르세요.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: The Grammar (Interactive Playground) -->
+        <section id="grammar" class="scroll-mt-20">
+            <div class="mb-8">
+                <span class="text-amber-600 font-bold tracking-wider text-sm uppercase">Chapter 2</span>
+                <h2 class="text-3xl font-bold text-stone-900 mt-2">Vim의 문법: 동사 + 명사</h2>
+                <p class="mt-4 text-stone-600 text-lg">
+                    Vim 명령어는 언어와 같습니다. <span class="font-bold">동사(Operator)</span>와 <span class="font-bold">명사(Motion/Text Object)</span>를 조합하여 문장을 만듭니다.
+                    <br>예: <code class="highlight-code">d</code>(Delete, 지워라) + <code class="highlight-code">w</code>(Word, 단어를) = <code class="highlight-code">dw</code> (단어를 지워라).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Interactive Editor Simulator -->
+                <div class="bg-stone-900 text-stone-200 rounded-xl p-6 font-mono shadow-lg relative">
+                    <div class="flex justify-between items-center mb-4 border-b border-stone-700 pb-2">
+                        <span class="text-sm text-stone-400">interactive_buffer.js</span>
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="code-display" class="leading-loose text-lg min-h-[160px]">
+                        function <span id="target-word" class="text-blue-400">greet</span>(name) {<br>
+                        &nbsp;&nbsp;console.log("Hello " + name);<br>
+                        &nbsp;&nbsp;return true;<br>
+                        }
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 text-xs text-stone-500">
+                        Visual Simulator
+                    </div>
+                </div>
+
+                <!-- Command Controls -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-stone-200">
+                        <h4 class="font-bold text-stone-800 mb-4">명령어 실행해보기 (Click to Execute)</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="runSim('ciw')" class="neo-btn text-left p-3 rounded hover:bg-amber-50 border border-stone-200 hover:border-amber-300 group">
+                                <span class="block font-bold text-amber-700 mb-1">ciw</span>
+                                <span class="text-xs text-stone-500 group-hover:text-stone-700">Change Inner Word<br>(단어 내부 변경)</span>
+                            </button>
+                            <button onclick="runSim('dd')" class="neo-btn text-left p-3 rounded hover:bg-amber-50 border border-stone-200 hover:border-amber-300 group">
+                                <span class="block font-bold text-amber-700 mb-1">dd</span>
+                                <span class="text-xs text-stone-500 group-hover:text-stone-700">Delete Line<br>(한 줄 삭제)</span>
+                            </button>
+                            <button onclick="runSim('dt(')" class="neo-btn text-left p-3 rounded hover:bg-amber-50 border border-stone-200 hover:border-amber-300 group">
+                                <span class="block font-bold text-amber-700 mb-1">dt(</span>
+                                <span class="text-xs text-stone-500 group-hover:text-stone-700">Delete 'Til (<br>('(' 전까지 삭제)</span>
+                            </button>
+                            <button onclick="runSim('yy')" class="neo-btn text-left p-3 rounded hover:bg-amber-50 border border-stone-200 hover:border-amber-300 group">
+                                <span class="block font-bold text-amber-700 mb-1">yyp</span>
+                                <span class="text-xs text-stone-500 group-hover:text-stone-700">Yank & Paste<br>(줄 복사 후 붙여넣기)</span>
+                            </button>
+                            <button onclick="runSim('reset')" class="sm:col-span-2 text-center p-2 rounded bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold border border-stone-300 mt-2">
+                                ⟲ 초기화 (Reset)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-amber-50 p-4 rounded-lg border border-amber-100 text-sm">
+                        <h5 class="font-bold text-amber-800 mb-2">💡 구조 분석</h5>
+                        <ul class="list-disc list-inside space-y-1 text-amber-900">
+                            <li><strong class="font-mono">c</strong> (Change): 지우고 Insert 모드로 전환</li>
+                            <li><strong class="font-mono">i</strong> (Inner): 내부 (주변 공백 제외)</li>
+                            <li><strong class="font-mono">w</strong> (Word): 단어</li>
+                            <li>결과: 커서가 있는 단어를 지우고 바로 입력 상태가 됨.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Configuration (Lua Builder) -->
+        <section id="config" class="scroll-mt-20">
+            <div class="mb-8">
+                <span class="text-amber-600 font-bold tracking-wider text-sm uppercase">Chapter 3</span>
+                <h2 class="text-3xl font-bold text-stone-900 mt-2">나만의 에디터 만들기 (init.lua)</h2>
+                <p class="mt-4 text-stone-600 text-lg">
+                    Neovim은 백지 상태로 시작합니다. <code class="highlight-code">init.lua</code> 파일이 당신의 설정 본부입니다.
+                    원하는 옵션을 체크하여 기본 설정 코드를 생성해보세요.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-0 border border-stone-200 rounded-xl overflow-hidden shadow-sm">
+                <!-- Controls -->
+                <div class="bg-white p-8">
+                    <h4 class="font-bold text-stone-800 mb-6 text-lg">설정 옵션 (Options)</h4>
+                    <div class="space-y-4">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="opt-number" checked onchange="updateConfig()" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                            <span class="text-stone-700">줄 번호 표시 (vim.opt.number)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="opt-rel" onchange="updateConfig()" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                            <span class="text-stone-700">상대적 줄 번호 (vim.opt.relativenumber)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="opt-clipboard" checked onchange="updateConfig()" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                            <span class="text-stone-700">시스템 클립보드 연동 (vim.opt.clipboard)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="opt-indent" checked onchange="updateConfig()" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                            <span class="text-stone-700">스마트 들여쓰기 (tab = 4 spaces)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="opt-keymap" onchange="updateConfig()" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                            <span class="text-stone-700">Leader Key를 'Space'로 설정</span>
+                        </label>
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-stone-100">
+                        <p class="text-sm text-stone-500">
+                            이 코드를 <br><code class="bg-stone-100 px-1 rounded">~/.config/nvim/init.lua</code><br> 파일에 저장하면 적용됩니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Code Output -->
+                <div class="bg-stone-800 p-8 overflow-x-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-stone-400 font-mono text-sm">init.lua Preview</span>
+                        <button class="text-xs bg-stone-700 text-stone-300 px-2 py-1 rounded hover:bg-stone-600" onclick="copyConfig()">Copy</button>
+                    </div>
+                    <pre class="font-mono text-sm leading-relaxed"><code id="lua-output" class="language-lua text-green-300">-- Neovim Config
+vim.opt.number = true
+vim.opt.clipboard = "unnamedplus"
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 4
+</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Plugins & Ecosystem (Data Viz) -->
+        <section id="plugins" class="scroll-mt-20">
+            <div class="mb-8">
+                <span class="text-amber-600 font-bold tracking-wider text-sm uppercase">Chapter 4</span>
+                <h2 class="text-3xl font-bold text-stone-900 mt-2">플러그인 생태계 확장</h2>
+                <p class="mt-4 text-stone-600 text-lg">
+                    Neovim의 진정한 힘은 플러그인에서 나옵니다. 현대적인 IDE 기능(자동완성, 파일 탐색 등)을 추가할 수 있습니다.
+                    어떤 종류의 플러그인부터 설치해야 할까요?
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200">
+                     <div class="chart-container">
+                        <canvas id="pluginChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-stone-800">필수 플러그인 카테고리</h3>
+                    
+                    <div class="group p-4 bg-white border border-stone-200 rounded-lg hover:border-blue-400 transition cursor-default">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                            <h4 class="font-bold text-stone-800">LSP & Autocomplete</h4>
+                        </div>
+                        <p class="text-sm text-stone-600">
+                            언어 서버 프로토콜(LSP)을 통해 VSCode 수준의 자동완성, 정의로 이동, 오류 검사를 제공합니다.
+                            <br><span class="text-stone-400 text-xs">추천: nvim-lspconfig, nvim-cmp</span>
+                        </p>
+                    </div>
+
+                    <div class="group p-4 bg-white border border-stone-200 rounded-lg hover:border-green-400 transition cursor-default">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            <h4 class="font-bold text-stone-800">Treesitter (Syntax Highlighting)</h4>
+                        </div>
+                        <p class="text-sm text-stone-600">
+                            단순한 정규식 기반이 아닌, 코드의 구조(AST)를 이해하여 더 빠르고 정확한 색상을 입힙니다.
+                            <br><span class="text-stone-400 text-xs">추천: nvim-treesitter</span>
+                        </p>
+                    </div>
+
+                    <div class="group p-4 bg-white border border-stone-200 rounded-lg hover:border-amber-400 transition cursor-default">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <h4 class="font-bold text-stone-800">Fuzzy Finder</h4>
+                        </div>
+                        <p class="text-sm text-stone-600">
+                            파일, 코드, 명령어 등을 흐릿한 검색어만으로도 순식간에 찾아냅니다.
+                            <br><span class="text-stone-400 text-xs">추천: telescope.nvim</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-12">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <h3 class="text-white text-lg font-bold mb-4">&lt;Neovim/&gt;</h3>
+            <p class="mb-8 max-w-lg mx-auto text-sm">
+                연습은 완벽을 만듭니다. 처음에는 느리게 느껴지더라도, 2주만 버티면 이전으로 돌아갈 수 없을 것입니다.
+            </p>
+            <div class="flex justify-center gap-6 text-sm">
+                <a href="#" class="hover:text-white transition">공식 문서</a>
+                <a href="#" class="hover:text-white transition">Reddit r/neovim</a>
+                <a href="#" class="hover:text-white transition">Lua 가이드</a>
+            </div>
+            <p class="mt-8 text-xs text-stone-600">Generated for Educational Purposes.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Learning Curve Chart Logic ---
+        const ctxLearning = document.getElementById('learningCurveChart').getContext('2d');
+        const learningChart = new Chart(ctxLearning, {
+            type: 'line',
+            data: {
+                labels: ['1일차', '1주차', '2주차 (The Wall)', '1달', '3달', '6달+'],
+                datasets: [
+                    {
+                        label: '일반 에디터 생산성',
+                        data: [50, 55, 60, 65, 70, 75],
+                        borderColor: '#a8a29e', // stone-400
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Neovim 생산성',
+                        data: [10, 30, 45, 80, 120, 180], // Exponential growth
+                        borderColor: '#d97706', // amber-600
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#d97706',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataIndex === 2 && context.datasetIndex === 1) {
+                                    return "포기하기 쉬운 구간 (The Wall)";
+                                }
+                                return context.dataset.label + ": " + context.raw + "%";
+                            }
+                        }
+                    },
+                    annotation: {
+                        // If we had the annotation plugin, we'd mark "The Wall" here.
+                        // Since we are using standard Chart.js, we rely on tooltips.
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: '생산성 (Efficiency)' },
+                        grid: { color: '#f5f5f4' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // --- 2. Plugin Distribution Chart Logic ---
+        const ctxPlugin = document.getElementById('pluginChart').getContext('2d');
+        const pluginChart = new Chart(ctxPlugin, {
+            type: 'doughnut',
+            data: {
+                labels: ['LSP & Completion', 'Syntax (Treesitter)', 'UI & Themes', 'Fuzzy Finding', 'Git Integration', 'Utility'],
+                datasets: [{
+                    data: [30, 15, 20, 15, 10, 10],
+                    backgroundColor: [
+                        '#3b82f6', // blue-500
+                        '#22c55e', // green-500
+                        '#f97316', // orange-500
+                        '#f59e0b', // amber-500
+                        '#ef4444', // red-500
+                        '#a8a29e'  // stone-400
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12, padding: 20 }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+
+        // --- 3. Mode Switching Logic ---
+        const modeTitle = document.getElementById('mode-title');
+        const modeDesc = document.getElementById('mode-desc');
+        const btnNormal = document.getElementById('btn-normal');
+        const btnInsert = document.getElementById('btn-insert');
+
+        // Descriptions for keys in different modes
+        const keyDescs = {
+            normal: {
+                h: '왼쪽 이동', j: '아래 이동', k: '위로 이동', l: '오른쪽 이동',
+                w: '다음 단어', d: '삭제(잘라내기)'
+            },
+            insert: {
+                h: '글자 "h" 입력', j: '글자 "j" 입력', k: '글자 "k" 입력', l: '글자 "l" 입력',
+                w: '글자 "w" 입력', d: '글자 "d" 입력'
+            }
+        };
+
+        function setMode(mode) {
+            const keys = ['h', 'j', 'k', 'l', 'w', 'd'];
+            
+            if (mode === 'normal') {
+                modeTitle.textContent = "Normal Mode: 명령 상태";
+                modeDesc.innerHTML = `이 상태에서는 키보드를 눌러도 글자가 입력되지 않습니다. 대신 커서를 이동하거나 텍스트를 조작하는 명령을 내립니다.<br><br><span class="bg-amber-100 text-amber-800 px-1 rounded">hjkl</span>은 방향키를 대체하며, 손을 키보드 중앙(Home Row)에서 떼지 않게 해줍니다.`;
+                
+                // Styling buttons
+                btnNormal.classList.add('bg-amber-50', 'text-amber-700', 'border-b-2', 'border-amber-600');
+                btnNormal.classList.remove('text-stone-500', 'hover:bg-stone-50');
+                btnInsert.classList.remove('bg-amber-50', 'text-amber-700', 'border-b-2', 'border-amber-600');
+                btnInsert.classList.add('text-stone-500', 'hover:bg-stone-50');
+
+                // Update Key Descs
+                keys.forEach(k => {
+                    const el = document.getElementById(`key-${k}-desc`);
+                    el.textContent = keyDescs.normal[k];
+                    el.classList.add('text-amber-700', 'font-bold');
+                    el.classList.remove('text-stone-400', 'font-normal');
+                    el.parentElement.classList.add('hover:border-amber-400');
+                });
+
+            } else {
+                modeTitle.textContent = "Insert Mode: 입력 상태";
+                modeDesc.innerHTML = `우리가 흔히 아는 메모장과 같은 상태입니다. 키를 누르면 화면에 글자가 나타납니다.<br><br>하지만 Neovim 사용자는 <span class="font-bold">이 모드에 오래 머물지 않습니다.</span> 텍스트를 입력할 때만 들어오고, 즉시 <code class="highlight-code">Esc</code>를 눌러 나갑니다.`;
+
+                // Styling buttons
+                btnInsert.classList.add('bg-amber-50', 'text-amber-700', 'border-b-2', 'border-amber-600');
+                btnInsert.classList.remove('text-stone-500', 'hover:bg-stone-50');
+                btnNormal.classList.remove('bg-amber-50', 'text-amber-700', 'border-b-2', 'border-amber-600');
+                btnNormal.classList.add('text-stone-500', 'hover:bg-stone-50');
+
+                // Update Key Descs
+                keys.forEach(k => {
+                    const el = document.getElementById(`key-${k}-desc`);
+                    el.textContent = keyDescs.insert[k];
+                    el.classList.remove('text-amber-700', 'font-bold');
+                    el.classList.add('text-stone-400', 'font-normal');
+                    el.parentElement.classList.remove('hover:border-amber-400');
+                });
+            }
+        }
+
+        // --- 4. Interactive Buffer Simulator ---
+        const originalCode = `function <span id="target-word" class="text-blue-400">greet</span>(name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+        const codeDisplay = document.getElementById('code-display');
+
+        function runSim(command) {
+            // Reset base state visuals
+            codeDisplay.className = "leading-loose text-lg min-h-[160px]";
+
+            if (command === 'reset') {
+                codeDisplay.innerHTML = originalCode;
+                return;
+            }
+
+            if (command === 'ciw') {
+                // Simulate changing inner word "greet"
+                // 1. Remove "greet"
+                // 2. Add cursor
+                codeDisplay.innerHTML = `function <span class="border-l-2 border-amber-500 cursor-blink"></span>(name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                setTimeout(() => {
+                    // Simulate typing new name
+                    codeDisplay.innerHTML = `function <span class="text-blue-400">hello</span><span class="border-l-2 border-amber-500 cursor-blink"></span>(name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                }, 800);
+            } else if (command === 'dd') {
+                // Remove first line animation
+                codeDisplay.innerHTML = `
+                <div class="opacity-30 line-through decoration-red-500 decoration-2">function greet(name) {</div>
+                &nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                
+                setTimeout(() => {
+                    codeDisplay.innerHTML = `&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                }, 600);
+            } else if (command === 'dt(') {
+                // Delete till (
+                codeDisplay.innerHTML = `function <span class="bg-red-900/50 text-stone-400">greet</span>(name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                 setTimeout(() => {
+                    codeDisplay.innerHTML = `function (name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                }, 600);
+            } else if (command === 'yy') {
+                // Yank and Paste
+                // Flash the line
+                codeDisplay.innerHTML = `<div class="bg-amber-700/50 transition duration-300">function greet(name) {</div>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                setTimeout(() => {
+                    codeDisplay.innerHTML = `function greet(name) {<br>function greet(name) {<br>&nbsp;&nbsp;console.log("Hello " + name);<br>&nbsp;&nbsp;return true;<br>}`;
+                }, 600);
+            }
+        }
+
+        // --- 5. Config Builder Logic ---
+        function updateConfig() {
+            const num = document.getElementById('opt-number').checked;
+            const rel = document.getElementById('opt-rel').checked;
+            const clip = document.getElementById('opt-clipboard').checked;
+            const indent = document.getElementById('opt-indent').checked;
+            const keymap = document.getElementById('opt-keymap').checked;
+
+            let code = `-- Neovim Config generated by Tutorial\n\n`;
+
+            if (num) code += `vim.opt.number = true\n`;
+            if (rel) code += `vim.opt.relativenumber = true -- 현재 줄 기준 상대 번호\n`;
+            if (clip) code += `vim.opt.clipboard = "unnamedplus" -- OS 클립보드 공유\n`;
+            if (indent) {
+                code += `vim.opt.expandtab = true\n`;
+                code += `vim.opt.shiftwidth = 4\n`;
+                code += `vim.opt.tabstop = 4\n`;
+            }
+            if (keymap) {
+                code += `\n-- Leader key setting\n`;
+                code += `vim.g.mapleader = " "\n`;
+                code += `vim.keymap.set("n", "<leader>w", ":w<CR>", { desc = "Save" })\n`;
+            }
+
+            document.getElementById('lua-output').innerText = code;
+        }
+
+        function copyConfig() {
+            const text = document.getElementById('lua-output').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("설정 코드가 복사되었습니다!");
+            });
+        }
+
+        // Helper: Scroll
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize
+        updateConfig();
+    </script>
+</body>
+</html>
