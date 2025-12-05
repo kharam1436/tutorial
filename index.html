@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+        }
+
+        .gradient-neovim {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
+        .gradient-svelte {
+            background: linear-gradient(135deg, #ff3e00 0%, #ff8a00 100%);
+        }
+
+        .hero-text {
+            letter-spacing: -0.02em;
+        }
+    </style>
+</head>
+<body class="bg-white antialiased">
+    
+    <!-- Header -->
+    <header class="pt-12 pb-8 px-6">
+        <div class="max-w-5xl mx-auto text-center">
+            <h1 class="text-5xl md:text-7xl font-semibold text-gray-900 hero-text mb-4">
+                Learn.
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-500 font-light max-w-2xl mx-auto">
+                Master the tools that make you faster, smarter, and more productive.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="px-6 py-16">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Neovim Card -->
+            <a href="neovim/index.html" class="card group block">
+                <div class="gradient-neovim rounded-3xl p-12 h-96 flex flex-col justify-between overflow-hidden relative shadow-xl">
+                    <!-- Background Pattern -->
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-3xl"></div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="text-6xl mb-6">📝</div>
+                        <h2 class="text-4xl font-semibold text-white mb-3">Neovim</h2>
+                        <p class="text-slate-300 text-lg font-light leading-relaxed">
+                            Edit at the speed of thought. Learn modal editing and unlock unparalleled efficiency.
+                        </p>
+                    </div>
+                    
+                    <div class="relative z-10 flex items-center text-white font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Start learning</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Svelte Card -->
+            <a href="svelte/index.html" class="card group block">
+                <div class="gradient-svelte rounded-3xl p-12 h-96 flex flex-col justify-between overflow-hidden relative shadow-xl">
+                    <!-- Background Pattern -->
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+                        <div class="absolute bottom-0 right-0 w-48 h-48 bg-white rounded-full blur-3xl"></div>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="text-6xl mb-6">🍊</div>
+                        <h2 class="text-4xl font-semibold text-white mb-3">SvelteKit</h2>
+                        <p class="text-orange-100 text-lg font-light leading-relaxed">
+                            Build blazingly fast web apps. Discover the framework that compiles away complexity.
+                        </p>
+                    </div>
+                    
+                    <div class="relative z-10 flex items-center text-white font-medium group-hover:translate-x-2 transition-transform">
+                        <span>Start learning</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 text-center">
+        <p class="text-gray-400 text-sm font-light">
+            Choose your path. Master your craft.
+        </p>
+    </footer>
+
+</body>
+</html>
