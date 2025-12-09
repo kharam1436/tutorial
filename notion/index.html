@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notion 마스터 클래스: 단계별 학습 코스</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Notion-like Font and Feel */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      background-color: #F7F7F5;
+      /* Warm neutral background */
+      color: #37352F;
+    }
+
+    .notion-card {
+      background: white;
+      border: 1px solid #E1E1E0;
+      border-radius: 8px;
+      /* Slightly softer corners */
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .notion-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 300px;
+      max-height: 400px;
+    }
+
+    /* Custom Scrollbar for inner content */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #D3D1CB;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #AEACA6;
+    }
+
+    .active-tab {
+      border-bottom: 2px solid #37352F;
+      color: #37352F;
+      font-weight: 600;
+    }
+
+    .inactive-tab {
+      color: #9B9A97;
+    }
+
+    .inactive-tab:hover {
+      color: #37352F;
+      background-color: rgba(55, 53, 47, 0.08);
+    }
+  </style>
+  <!-- Chosen Palette: Notion Classic (Warm Neutrals #F7F7F5, Charcoal #37352F, Light Gray #E1E1E0) -->
+  <!-- Application Structure Plan: 
+        1. Header: Simple, clean branding with progress tracking.
+        2. Dashboard/Overview: A visual roadmap of the learning journey using a Chart.js line chart to symbolize the learning curve vs productivity.
+        3. Main Learning Modules (Tabs): Divided into 4 distinct phases (Basics, Databases, Relationships, Dashboards).
+           - This structure allows the user to focus on one complexity level at a time.
+           - Left column: Curriculum list (interactive accordion).
+           - Right column: "Preview/Context" pane that dynamically updates to explain the selected skill with examples (Book Note, Work Task).
+        4. Use Case Simulator: A section specifically for "Book Notes" vs "Work", showing how the learned skills combine into a final product.
+        5. Interactive Checklist: Users can check off skills to see their progress bar update, gamifying the experience.
+    -->
+  <!-- Visualization & Content Choices:
+        - Chart.js Line Chart: Visualizes the concept of "Learning Curve" - showing how initial effort leads to exponential productivity gains. Goal: Motivate the user.
+        - Chart.js Radar Chart: "Notion Skill Profile" comparing different user types (Student, PM, Creator) to show which skills matter for whom. Goal: Contextualize skills.
+        - Dynamic HTML "Mock Blocks": Instead of static images, I will use styled HTML divs to simulate what a Notion Block, Database, or Gallery looks like. Goal: Interactive realism without heavy assets.
+        - Progress Bar: Simple visual feedback for course completion.
+        - Justification: NO SVG/Mermaid used to adhere to constraints. Canvas used for data viz. Unicode used for icons.
+    -->
+  <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+
+<body class="antialiased min-h-screen flex flex-col">
+
+  <!-- Navbar / Header -->
+  <header class="bg-white border-b border-[#E1E1E0] sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-3xl">📝</span>
+        <h1 class="font-bold text-xl tracking-tight text-[#37352F]">Notion Mastery Path</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-sm text-[#9B9A97] hidden sm:block">전체 진척도</div>
+        <div class="w-32 h-2 bg-[#E1E1E0] rounded-full overflow-hidden">
+          <div id="global-progress" class="h-full bg-[#37352F] w-0 transition-all duration-500"></div>
+        </div>
+        <span id="progress-text" class="text-sm font-semibold text-[#37352F]">0%</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+    <!-- Intro Section -->
+    <section class="mb-12 text-center max-w-3xl mx-auto">
+      <h2 class="text-4xl font-bold mb-4 text-[#37352F]">노션, 어떻게 시작해야 할까요?</h2>
+      <p class="text-lg text-[#5A5853] mb-8">
+        단순한 메모장에서 업무용 협업 도구까지. <br>
+        책 노트 정리부터 회사 업무 관리까지 가능한 <strong>Notion</strong>을 단계별로 마스터해보세요.
+      </p>
+
+      <!-- Context & Motivation Chart -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="text-left space-y-4">
+          <div class="bg-white p-6 rounded-lg border border-[#E1E1E0] shadow-sm">
+            <h3 class="font-bold text-lg mb-2">🚀 왜 배워야 하나요?</h3>
+            <p class="text-sm text-[#5A5853]">초기 학습 곡선은 있지만, <strong>데이터베이스</strong>와 <strong>관계형 연결</strong>을 이해하는 순간
+              생산성이 폭발적으로 증가합니다.</p>
+          </div>
+          <div class="bg-white p-6 rounded-lg border border-[#E1E1E0] shadow-sm">
+            <h3 class="font-bold text-lg mb-2">🎯 이 코스의 목표</h3>
+            <ul class="text-sm text-[#5A5853] space-y-2 list-disc pl-4">
+              <li>독서 노트 (Gallery View) 구축</li>
+              <li>프로젝트/할 일 관리 (Kanban) 구축</li>
+              <li>나만의 대시보드 만들기</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Chart 1: The Learning Curve -->
+        <div class="bg-white p-4 rounded-lg border border-[#E1E1E0] shadow-sm flex flex-col items-center">
+          <h4 class="text-sm font-semibold text-[#9B9A97] mb-2 uppercase tracking-wider">학습 곡선 vs 생산성</h4>
+          <div class="chart-container">
+            <canvas id="learningCurveChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Course Navigation Tabs -->
+    <div class="border-b border-[#E1E1E0] mb-8 overflow-x-auto">
+      <nav class="flex space-x-8" id="module-tabs">
+        <!-- Injected via JS -->
+      </nav>
+    </div>
+
+    <!-- Dynamic Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Left Column: Curriculum List -->
+      <div class="lg:col-span-4 space-y-4" id="curriculum-list">
+        <div class="p-4 bg-white rounded-lg border border-[#E1E1E0]">
+          <p class="text-center text-gray-500">코스 로딩 중...</p>
+        </div>
+      </div>
+
+      <!-- Right Column: Detail View & Simulator -->
+      <div class="lg:col-span-8">
+        <div id="detail-view" class="bg-white min-h-[500px] rounded-lg border border-[#E1E1E0] shadow-sm p-8 relative">
+          <!-- Default State -->
+          <div class="text-center flex flex-col items-center justify-center h-full space-y-4">
+            <span class="text-6xl">👈</span>
+            <h3 class="text-2xl font-bold text-[#37352F]">왼쪽에서 학습 단계를 선택하세요</h3>
+            <p class="text-[#9B9A97]">각 단계별 핵심 스킬과 예시를 확인할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Case Showdown Section -->
+    <section class="mt-16 pt-16 border-t border-[#E1E1E0]">
+      <div class="flex flex-col md:flex-row justify-between items-end mb-8">
+        <div class="mb-4 md:mb-0">
+          <h2 class="text-2xl font-bold text-[#37352F] mb-2">🧩 실전 적용: 배운 내용을 조합하기</h2>
+          <p class="text-[#5A5853]">위에서 배운 스킬들이 실제 독서 노트와 업무 관리에서 어떻게 쓰이는지 비교해보세요.</p>
+        </div>
+        <!-- Controls for Radar Chart -->
+        <div class="flex space-x-2">
+          <button onclick="updateRadar('book')"
+            class="px-3 py-1 bg-[#F7F7F5] border border-[#E1E1E0] rounded hover:bg-[#E1E1E0] text-sm">📚 독서 노트</button>
+          <button onclick="updateRadar('work')"
+            class="px-3 py-1 bg-[#F7F7F5] border border-[#E1E1E0] rounded hover:bg-[#E1E1E0] text-sm">💼 업무 관리</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Use Case Description -->
+        <div class="space-y-6">
+          <div id="use-case-content" class="bg-white p-6 rounded-lg border border-[#E1E1E0]">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+        <!-- Radar Chart: Skills Required -->
+        <div class="bg-white p-6 rounded-lg border border-[#E1E1E0] flex flex-col items-center justify-center">
+          <h4 class="text-sm font-semibold text-[#9B9A97] mb-4">필요 스킬 분석</h4>
+          <div class="chart-container">
+            <canvas id="skillsRadarChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-16 py-8 border-t border-[#E1E1E0] bg-white">
+    <div class="max-w-6xl mx-auto px-4 text-center text-[#9B9A97] text-sm">
+      <p>Notion Interactive Learning Guide &copy; 2025</p>
+      <p class="mt-2">학습을 완료하면 자신만의 템플릿을 만들어보세요!</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // --- DATA STORE ---
+
+    const courseData = {
+      modules: [
+        {id: 'lv1', title: 'Lv.1 기초 다지기', icon: '🌱'},
+        {id: 'lv2', title: 'Lv.2 데이터베이스', icon: '🗂️'},
+        {id: 'lv3', title: 'Lv.3 연결과 확장', icon: '🔗'},
+        {id: 'lv4', title: 'Lv.4 고급 활용', icon: '🚀'}
+      ],
+      lessons: {
+        'lv1': [
+          {
+            id: 'block',
+            title: '블록(Block)의 이해',
+            desc: '노션의 가장 작은 단위인 블록을 이해합니다.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🧱 블록이란?</h3>
+                            <p class="mb-4">노션의 모든 것은 '블록'입니다. 텍스트 한 줄, 이미지 하나, 할 일 목록 하나가 모두 블록입니다. 레고처럼 조립하고 이동할 수 있습니다.</p>
+                            <div class="bg-[#F7F7F5] p-4 rounded mb-4 border border-[#E1E1E0]">
+                                <div class="flex items-center gap-2 mb-2 group cursor-pointer p-1 hover:bg-[#E1E1E0] rounded">
+                                    <span class="text-gray-400">⋮⋮</span> <input type="checkbox" disabled> <span class="line-through text-gray-400">우유 사기 (완료된 할 일 블록)</span>
+                                </div>
+                                <div class="flex items-center gap-2 group cursor-pointer p-1 hover:bg-[#E1E1E0] rounded">
+                                    <span class="text-gray-400">⋮⋮</span> <span>📝 회의록 작성 (텍스트 블록)</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-blue-50 text-blue-800 rounded text-sm">
+                                💡 <strong>Tip:</strong> 블록 왼쪽의 <span class="font-mono">⋮⋮</span> 아이콘을 잡아 끌면(Drag & Drop) 위치를 쉽게 바꿀 수 있습니다.
+                            </div>
+                        `
+          },
+          {
+            id: 'slash',
+            title: '슬래시(/) 명령어',
+            desc: '마우스 없이 빠르게 기능을 호출하는 법.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">⚡ 마법의 키 '/'</h3>
+                            <p class="mb-4">키보드에서 <code class="bg-gray-100 px-1 py-0.5 rounded font-mono text-red-500">/</code>를 입력하면 명령 메뉴가 열립니다.</p>
+                            <ul class="list-disc list-inside space-y-2 mb-4 bg-white p-4 border rounded">
+                                <li><code class="font-mono bg-gray-100">/page</code> : 새 페이지 만들기</li>
+                                <li><code class="font-mono bg-gray-100">/h1</code> : 대제목 만들기</li>
+                                <li><code class="font-mono bg-gray-100">/image</code> : 이미지 업로드</li>
+                                <li><code class="font-mono bg-gray-100">/callout</code> : 강조 박스 만들기</li>
+                            </ul>
+                        `
+          },
+          {
+            id: 'page',
+            title: '페이지와 하위 페이지',
+            desc: '무한히 확장되는 페이지 구조 만들기.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">📄 페이지 속의 페이지</h3>
+                            <p class="mb-4">노션은 폴더 개념이 없습니다. 대신 페이지 안에 또 다른 페이지를 무한히 넣을 수 있습니다.</p>
+                            <div class="border border-[#E1E1E0] rounded p-4 bg-white">
+                                <div class="flex items-center gap-2 mb-2 font-bold"><span class="text-xl">🏠</span> 홈 화면</div>
+                                <div class="ml-6 flex items-center gap-2 mb-1 text-gray-600">↳ <span class="text-lg">📚</span> 독서 노트 페이지</div>
+                                <div class="ml-12 flex items-center gap-2 text-gray-500">↳ 📄 2024년 독서 목록</div>
+                            </div>
+                        `
+          }
+        ],
+        'lv2': [
+          {
+            id: 'db_intro',
+            title: '데이터베이스 기초',
+            desc: '노션의 꽃, 표(Table) 만들기.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🗂️ 단순한 표가 아닙니다</h3>
+                            <p class="mb-4">엑셀과 비슷해 보이지만, 각 행(Row)이 하나의 <strong>페이지</strong>라는 점이 다릅니다.</p>
+                            <div class="overflow-x-auto border border-[#E1E1E0] rounded mb-4">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-[#F7F7F5] border-b">
+                                        <tr>
+                                            <th class="p-2 border-r">제목 (Aa)</th>
+                                            <th class="p-2 border-r">태그 (Multi-select)</th>
+                                            <th class="p-2">날짜 (Date)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b">
+                                            <td class="p-2 border-r">Clean Code <span class="text-xs text-gray-400">OPEN</span></td>
+                                            <td class="p-2 border-r"><span class="bg-orange-100 text-orange-800 px-1 rounded">개발</span></td>
+                                            <td class="p-2">2023.10.01</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 border-r">돈의 속성 <span class="text-xs text-gray-400">OPEN</span></td>
+                                            <td class="p-2 border-r"><span class="bg-green-100 text-green-800 px-1 rounded">경제</span></td>
+                                            <td class="p-2">2023.11.15</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-sm text-gray-600">각 제목을 클릭하면 책에 대한 상세 내용을 적을 수 있는 페이지가 열립니다.</p>
+                        `
+          },
+          {
+            id: 'properties',
+            title: '속성(Property) 활용',
+            desc: '데이터를 체계적으로 분류하는 태그들.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🏷️ 속성으로 분류하기</h3>
+                            <p class="mb-4">데이터베이스의 각 열(Column)은 속성을 가집니다. 이를 잘 설정해야 나중에 필터링이 가능합니다.</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-3 border rounded shadow-sm">
+                                    <div class="font-bold mb-1">Select / Multi-select</div>
+                                    <div class="text-xs text-gray-500">장르, 진행 상태(To Do, Done) 등 옵션 선택</div>
+                                </div>
+                                <div class="bg-white p-3 border rounded shadow-sm">
+                                    <div class="font-bold mb-1">Date</div>
+                                    <div class="text-xs text-gray-500">마감일, 독서 시작일, 회의 날짜</div>
+                                </div>
+                                <div class="bg-white p-3 border rounded shadow-sm">
+                                    <div class="font-bold mb-1">Person</div>
+                                    <div class="text-xs text-gray-500">담당자 할당 (@멘션 가능)</div>
+                                </div>
+                                <div class="bg-white p-3 border rounded shadow-sm">
+                                    <div class="font-bold mb-1">Checkbox</div>
+                                    <div class="text-xs text-gray-500">습관 체크, 완료 여부</div>
+                                </div>
+                            </div>
+                        `
+          },
+          {
+            id: 'views',
+            title: '다양한 뷰(View)',
+            desc: '같은 데이터를 다르게 보기 (보드, 캘린더 등).',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">👀 원 소스 멀티 유즈</h3>
+                            <p class="mb-4">데이터는 하나지만, 보는 방식(View)은 여러 개로 만들 수 있습니다.</p>
+                            <div class="space-y-4">
+                                <div class="bg-white border rounded p-3">
+                                    <span class="font-bold text-blue-600">Board View</span>
+                                    <p class="text-sm">칸반 보드. 업무 진행 상황(진행 전, 진행 중, 완료) 관리에 최적.</p>
+                                </div>
+                                <div class="bg-white border rounded p-3">
+                                    <span class="font-bold text-green-600">Calendar View</span>
+                                    <p class="text-sm">달력 형태. 마감일이 있는 프로젝트나 일정 관리에 최적.</p>
+                                </div>
+                                <div class="bg-white border rounded p-3">
+                                    <span class="font-bold text-purple-600">Gallery View</span>
+                                    <p class="text-sm">이미지 카드 형태. 책 표지를 보여주는 독서 노트나 포트폴리오에 최적.</p>
+                                </div>
+                            </div>
+                        `
+          }
+        ],
+        'lv3': [
+          {
+            id: 'filter_sort',
+            title: '필터(Filter)와 정렬(Sort)',
+            desc: '원하는 정보만 쏙쏙 뽑아보기.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🔍 나만의 조회 화면 만들기</h3>
+                            <p class="mb-4">데이터베이스에 항목이 100개가 넘어가면 필터가 필수입니다.</p>
+                            
+                            <div class="bg-[#F7F7F5] p-4 rounded border mb-4">
+                                <div class="font-mono text-sm mb-2 text-gray-500">// 필터 적용 예시</div>
+                                <div class="bg-white p-2 rounded border border-blue-200 text-sm">
+                                    Show items where <span class="font-bold text-blue-600">Status</span> is <span class="bg-yellow-100 px-1 rounded">In Progress</span>
+                                </div>
+                                <div class="text-center text-gray-400 my-1">⬇</div>
+                                <div class="bg-white p-2 rounded shadow-sm text-sm">
+                                    <div class="flex justify-between border-b py-1"><span>UI 디자인</span> <span class="bg-yellow-100 text-xs px-1">진행 중</span></div>
+                                    <div class="flex justify-between py-1"><span>API 연동</span> <span class="bg-yellow-100 text-xs px-1">진행 중</span></div>
+                                </div>
+                            </div>
+                            <p class="text-sm"><strong>Book Note Tip:</strong> '별점 5점'인 책만 모아보는 뷰를 따로 만들 수 있습니다.</p>
+                        `
+          },
+          {
+            id: 'templates',
+            title: '데이터베이스 템플릿',
+            desc: '반복되는 형식을 저장해두고 불러오기.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">📑 반복 업무 자동화</h3>
+                            <p class="mb-4">매번 똑같은 양식을 새로 만들지 마세요. 데이터베이스 템플릿을 설정하면 클릭 한 번으로 양식이 채워집니다.</p>
+                            <div class="border border-dashed border-gray-400 rounded p-4 bg-gray-50">
+                                <div class="text-sm text-gray-500 mb-2">New Page Template: "독서 리뷰 양식"</div>
+                                <hr class="border-gray-300 mb-2">
+                                <h4 class="font-bold">1. 인상 깊은 구절</h4>
+                                <p class="text-gray-400 text-sm mb-2">(내용을 입력하세요)</p>
+                                <h4 class="font-bold">2. 나의 생각</h4>
+                                <p class="text-gray-400 text-sm">(내용을 입력하세요)</p>
+                                <h4 class="font-bold">3. 적용할 점</h4>
+                            </div>
+                        `
+          }
+        ],
+        'lv4': [
+          {
+            id: 'relations',
+            title: '관계형(Relation) 데이터베이스',
+            desc: '서로 다른 데이터베이스 연결하기 (초고급 기술).',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🔗 연결의 힘</h3>
+                            <p class="mb-4">노션이 단순 메모앱을 넘어 '업무 OS'가 되는 시점입니다. '프로젝트 DB'와 '할 일 DB'를 따로 만들고 연결합니다.</p>
+                            
+                            <div class="grid grid-cols-3 gap-2 text-sm text-center mb-4">
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200 col-span-1">
+                                    <strong>프로젝트 DB</strong><br>
+                                    (A 웹사이트 리뉴얼)
+                                </div>
+                                <div class="flex items-center justify-center text-gray-400">↔ 연결 ↔</div>
+                                <div class="bg-green-50 p-2 rounded border border-green-200 col-span-1">
+                                    <strong>할 일 DB</strong><br>
+                                    (1. 기획안 작성)<br>
+                                    (2. 디자인 시안)
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-600">이렇게 연결하면, 프로젝트 페이지에서 관련된 모든 할 일을 한눈에 볼 수 있습니다.</p>
+                        `
+          },
+          {
+            id: 'dashboard',
+            title: '대시보드 구축',
+            desc: '모든 정보를 한 화면에 모으기.',
+            detailHtml: `
+                            <h3 class="text-xl font-bold mb-4">🖥️ 나만의 관제탑</h3>
+                            <p class="mb-4">여러 데이터베이스의 '링크된 뷰(Linked View)'를 한 페이지에 모읍니다.</p>
+                            <div class="bg-gray-800 text-white p-4 rounded shadow-lg text-xs">
+                                <div class="flex justify-between border-b border-gray-600 pb-2 mb-2">
+                                    <span>🌞 Good Morning, User!</span>
+                                    <span>📅 Today</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-gray-700 p-2 rounded">
+                                        <div class="font-bold mb-1 text-red-300">🚨 긴급 업무</div>
+                                        <div>- 버그 수정</div>
+                                        <div>- 클라이언트 미팅</div>
+                                    </div>
+                                    <div class="bg-gray-700 p-2 rounded">
+                                        <div class="font-bold mb-1 text-green-300">📘 읽고 있는 책</div>
+                                        <div>- 사피엔스 (30%)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+          }
+        ]
+      }
+    };
+
+    const useCases = {
+      book: {
+        title: '📚 독서 노트 (Book Tracker)',
+        desc: '읽은 책을 기록하고, 평점을 매기고, 인사이트를 정리합니다.',
+        skills: [5, 4, 3, 2, 1], // Lv1~Lv5 scale for radar
+        content: `
+                    <h4 class="font-bold mb-2">추천 구조</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 mb-4">
+                        <li><strong>View:</strong> Gallery View (책 표지 감상용)</li>
+                        <li><strong>속성:</strong> 저자(Text), 장르(Select), 평점(Select: ⭐⭐⭐⭐⭐), 독서기간(Date), 상태(읽는중/완독)</li>
+                        <li><strong>템플릿:</strong> 책 내용을 요약할 수 있는 목차 템플릿 사용</li>
+                    </ul>
+                    <div class="bg-gray-50 p-3 rounded text-sm border">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-white p-2 shadow-sm rounded text-center">
+                                <div class="h-16 bg-gray-200 mb-2 rounded flex items-center justify-center text-2xl">📕</div>
+                                <div class="font-bold text-xs truncate">해리포터</div>
+                                <div class="text-[10px] text-yellow-500">⭐⭐⭐⭐⭐</div>
+                            </div>
+                            <div class="bg-white p-2 shadow-sm rounded text-center">
+                                <div class="h-16 bg-gray-200 mb-2 rounded flex items-center justify-center text-2xl">📘</div>
+                                <div class="font-bold text-xs truncate">코스모스</div>
+                                <div class="text-[10px] text-yellow-500">⭐⭐⭐⭐</div>
+                            </div>
+                            <div class="bg-white p-2 shadow-sm rounded text-center">
+                                <div class="h-16 bg-gray-200 mb-2 rounded flex items-center justify-center text-2xl">📗</div>
+                                <div class="font-bold text-xs truncate">돈의 심리학</div>
+                                <div class="text-[10px] text-gray-400">읽는 중</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+      },
+      work: {
+        title: '💼 업무 관리 (Project & Task)',
+        desc: '프로젝트의 진행 상황을 파악하고 세부 할 일을 관리합니다.',
+        skills: [3, 5, 5, 4, 5],
+        content: `
+                    <h4 class="font-bold mb-2">추천 구조</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1 mb-4">
+                        <li><strong>View:</strong> Board View (상태별 이동), List View (오늘 할 일)</li>
+                        <li><strong>속성:</strong> 마감일(Date), 담당자(Person), 우선순위(Select), 관련 프로젝트(Relation)</li>
+                        <li><strong>팁:</strong> '오늘 할 일'만 보여주는 필터를 건 List View를 대시보드에 두세요.</li>
+                    </ul>
+                    <div class="bg-gray-100 p-2 rounded flex gap-2 overflow-x-auto">
+                        <div class="min-w-[100px] flex-1">
+                            <div class="text-xs font-bold text-gray-500 mb-1">To Do <span class="bg-gray-200 px-1 rounded">2</span></div>
+                            <div class="bg-white p-2 rounded shadow-sm text-xs mb-1 border-l-2 border-red-400">기획안 초안</div>
+                            <div class="bg-white p-2 rounded shadow-sm text-xs border-l-2 border-blue-400">시장 조사</div>
+                        </div>
+                        <div class="min-w-[100px] flex-1">
+                            <div class="text-xs font-bold text-blue-500 mb-1">In Progress <span class="bg-blue-100 px-1 rounded">1</span></div>
+                            <div class="bg-white p-2 rounded shadow-sm text-xs">디자인 시안 제작</div>
+                        </div>
+                        <div class="min-w-[100px] flex-1">
+                            <div class="text-xs font-bold text-green-500 mb-1">Done <span class="bg-green-100 px-1 rounded">3</span></div>
+                            <div class="bg-white p-2 rounded shadow-sm text-xs opacity-50 line-through">주간 보고</div>
+                        </div>
+                    </div>
+                `
+      }
+    };
+
+    // --- STATE MANAGEMENT ---
+    let currentLevel = 'lv1';
+    let completedLessons = new Set();
+
+    // --- DOM ELEMENTS ---
+    const tabsContainer = document.getElementById('module-tabs');
+    const curriculumContainer = document.getElementById('curriculum-list');
+    const detailView = document.getElementById('detail-view');
+    const progressText = document.getElementById('progress-text');
+    const globalProgress = document.getElementById('global-progress');
+    const useCaseContent = document.getElementById('use-case-content');
+
+    // --- INITIALIZATION ---
+    function init() {
+      renderTabs();
+      renderCurriculum(currentLevel);
+      initCharts();
+      updateRadar('book'); // Default use case
+    }
+
+    // --- RENDER FUNCTIONS ---
+
+    function renderTabs() {
+      tabsContainer.innerHTML = courseData.modules.map(mod => `
+                <button 
+                    onclick="switchTab('${mod.id}')"
+                    class="pb-3 px-1 whitespace-nowrap ${currentLevel === mod.id ? 'active-tab' : 'inactive-tab'} transition-colors duration-200"
+                >
+                    <span class="mr-2">${mod.icon}</span>${mod.title}
+                </button>
+            `).join('');
+    }
+
+    function switchTab(levelId) {
+      currentLevel = levelId;
+      renderTabs();
+      renderCurriculum(levelId);
+      // Reset detail view
+      detailView.innerHTML = `
+                <div class="text-center flex flex-col items-center justify-center h-full space-y-4">
+                    <span class="text-6xl">👈</span>
+                    <h3 class="text-2xl font-bold text-[#37352F]">학습 주제를 선택하세요</h3>
+                    <p class="text-[#9B9A97]">${courseData.modules.find(m => m.id === levelId).title} 과정입니다.</p>
+                </div>
+            `;
+    }
+
+    function renderCurriculum(levelId) {
+      const lessons = courseData.lessons[levelId];
+      curriculumContainer.innerHTML = lessons.map(lesson => {
+        const isCompleted = completedLessons.has(lesson.id);
+        return `
+                <div onclick="loadLesson('${lesson.id}')" class="notion-card cursor-pointer p-4 hover:bg-gray-50 group transition-all">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h4 class="font-bold text-[#37352F] group-hover:text-blue-600 transition-colors">${lesson.title}</h4>
+                            <p class="text-sm text-[#9B9A97] mt-1">${lesson.desc}</p>
+                        </div>
+                        <div class="ml-2">
+                             ${isCompleted ? '<span class="text-green-500">✅</span>' : '<span class="text-gray-300">⬜</span>'}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+    }
+
+    function loadLesson(lessonId) {
+      // Find lesson data (search across all levels)
+      let lesson;
+      for (const lvl in courseData.lessons) {
+        const found = courseData.lessons[lvl].find(l => l.id === lessonId);
+        if (found) {
+          lesson = found;
+          break;
+        }
+      }
+
+      if (!lesson) return;
+
+      const isCompleted = completedLessons.has(lessonId);
+
+      detailView.innerHTML = `
+                <div class="fade-in">
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-[#E1E1E0]">
+                        <h2 class="text-3xl font-bold text-[#37352F]">${lesson.title}</h2>
+                        <button onclick="toggleComplete('${lessonId}')" 
+                            class="px-4 py-2 rounded font-bold transition-all ${isCompleted ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[#37352F] text-white hover:bg-black'}">
+                            ${isCompleted ? '학습 완료됨' : '완료로 표시'}
+                        </button>
+                    </div>
+                    <div class="prose max-w-none text-[#37352F]">
+                        ${lesson.detailHtml}
+                    </div>
+                </div>
+            `;
+    }
+
+    function toggleComplete(lessonId) {
+      if (completedLessons.has(lessonId)) {
+        completedLessons.delete(lessonId);
+      } else {
+        completedLessons.add(lessonId);
+      }
+      updateProgress();
+      renderCurriculum(currentLevel); // Re-render to show checkmark
+      loadLesson(lessonId); // Re-render button state
+    }
+
+    function updateProgress() {
+      // Count total lessons
+      let total = 0;
+      Object.values(courseData.lessons).forEach(arr => total += arr.length);
+      const completed = completedLessons.size;
+      const percent = Math.round((completed / total) * 100);
+
+      globalProgress.style.width = `${percent}%`;
+      progressText.innerText = `${percent}%`;
+    }
+
+    // --- CHARTS ---
+    let radarChartInstance = null;
+
+    function initCharts() {
+      // 1. Learning Curve Line Chart
+      const ctxLine = document.getElementById('learningCurveChart').getContext('2d');
+      new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: ['입문', '기초', 'DB 이해', '관계형', '수식/함수', '마스터'],
+          datasets: [
+            {
+              label: '생산성(Productivity)',
+              data: [10, 20, 50, 85, 95, 100],
+              borderColor: '#37352F',
+              backgroundColor: 'rgba(55, 53, 47, 0.1)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: '난이도(Difficulty)',
+              data: [5, 10, 60, 70, 90, 80], // Drops at the end once mastered
+              borderColor: '#EB5757',
+              borderDash: [5, 5],
+              tension: 0.4,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {position: 'bottom'},
+            tooltip: {mode: 'index', intersect: false}
+          },
+          scales: {
+            y: {display: false, min: 0},
+            x: {grid: {display: false}}
+          }
+        }
+      });
+
+      // 2. Radar Chart placeholder
+      const ctxRadar = document.getElementById('skillsRadarChart').getContext('2d');
+      radarChartInstance = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: ['블록 편집', 'DB 속성', '필터/정렬', '관계형', '디자인'],
+          datasets: [{
+            label: '필요 스킬 레벨',
+            data: [0, 0, 0, 0, 0],
+            backgroundColor: 'rgba(55, 53, 47, 0.2)',
+            borderColor: '#37352F',
+            pointBackgroundColor: '#37352F'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: {display: false},
+              suggestedMin: 0,
+              suggestedMax: 5,
+              ticks: {display: false} // Hide numbers
+            }
+          }
+        }
+      });
+    }
+
+    function updateRadar(type) {
+      const data = useCases[type];
+      // Update Text Content
+      useCaseContent.innerHTML = `
+                <h3 class="text-xl font-bold text-[#37352F] mb-2">${data.title}</h3>
+                <p class="text-[#5A5853] mb-4">${data.desc}</p>
+                <div class="border-t pt-4 border-[#E1E1E0]">
+                    ${data.content}
+                </div>
+            `;
+
+      // Update Chart
+      radarChartInstance.data.datasets[0].data = data.skills;
+      radarChartInstance.data.datasets[0].label = data.title + " 필요 역량";
+      radarChartInstance.update();
+    }
+
+    // Run Init
+    init();
+
+  </script>
+</body>
+
+</html>
